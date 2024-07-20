@@ -51,6 +51,14 @@ def create_tables() -> None:
             order_id INTEGER PRIMARY KEY CHECK(order_id > 0),
             date TIMESTAMP(0)
         );
+        CREATE TABLE Order_Makers
+        (   
+            order_id INTEGER,
+            cust_id INTEGER,
+            FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+            FOREIGN KEY (cust_id) REFERENCES Customers(cust_id)
+        );
+        
         """)
     rv, _, _ =  execute_sql(query)
     return rv
@@ -62,7 +70,7 @@ def clear_tables() -> None:
 
 
 def drop_tables() -> None:
-    query = sql.SQL("DROP TABLE IF EXISTS Customers, Orders CASCADE")
+    query = sql.SQL("DROP TABLE IF EXISTS Customers, Orders, Dishes, Order_Makers CASCADE")
     rv, _, _ = execute_sql(query)
     return rv
 
@@ -123,7 +131,7 @@ def get_order(order_id: int) -> Order:
         #date=datetime.strptime(result['date'][0], "%Y-%m-%d %H:%M:%S")
     )
 def delete_order(order_id: int) -> ReturnValue:
-    query = sql.SQL("DELETE FROM Orders WHERE cust_id={0}").format(sql.Literal(order_id))
+    query = sql.SQL("DELETE FROM Orders WHERE order_id={0}").format(sql.Literal(order_id))
     rv, rows,_ = execute_sql(query)
     if rows == 0:
         return ReturnValue.NOT_EXISTS
@@ -146,12 +154,33 @@ def update_dish_active_status(dish_id: int, is_active: bool) -> ReturnValue:
     pass
 
 def customer_placed_order(customer_id: int, order_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL("INSERT INTO Order_Makers(order_id, cust_id) VALUES({0},{1})").format(
+        sql.Literal(order_id),
+        sql.Literal(customer_id))
+    rv, _, _  = execute_sql(query)
+    return rv
 
 def get_customer_that_placed_order(order_id: int) -> Customer:
-    # TODO: implement
-    pass
+    
+    query = sql.SQL("""CREATE VIEW my_cust_id AS 
+                    SELECT cust_id 
+                    FROM Orders 
+                    WHERE order_id={0};
+                    SELECT * 
+                    FROM Customers
+                    WHERE cust_id=my_cust_id;              
+                    """).format(sql.Literal(order_id))
+    rv, rows, result  = execute_sql(query)
+    if rv != ReturnValue.OK:
+        return rv
+    if rows == 0:
+        return BadCustomer()
+    return Customer(
+        cust_id=result['cust_id'][0],
+        full_name=result['full_name'][0],
+        phone=result['phone'][0],
+        address=result['address'][0]
+    )
 
 
 def order_contains_dish(order_id: int, dish_id: int, amount: int) -> ReturnValue:
