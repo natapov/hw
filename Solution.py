@@ -15,9 +15,32 @@ from Business.OrderDish import OrderDish
 
 
 def create_tables() -> None:
-    # TODO: implement
-    pass
-
+    conn = None
+    try:
+        conn = Connector.DBConnector()
+        query = sql.SQL(
+            """CREATE TABLE Custumers
+            (
+                cust_id INTEGER PRIMARY KEY,
+                full_name TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                address TEXT NOT NULL
+            )""")
+        conn.execute(query)
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def clear_tables() -> None:
     # TODO: implement
@@ -32,59 +55,230 @@ def drop_tables() -> None:
 # CRUD API
 
 def add_customer(customer: Customer) -> ReturnValue:
-    # TODO: implement
-    pass
+    conn = None
+    try:
+        conn = Connector.DBConnector()
+        query = sql.SQL(f"""INSERT INTO Customers(cust_id, full_name, phone, address) 
+                        VALUES
+                        (
+                            {customer.get_cust_id}, 
+                            {customer.get_full_name},
+                            {customer.get_phone},
+                            {customer.get_address}
+                        )""")
+        rows_effected, _ = conn.execute(query)
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
+        return ReturnValue.OK
 
 
 def get_customer(customer_id: int) -> Customer:
-    # TODO: implement
-    pass
+    conn = None
+    try:
+        pass
+
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 
 def delete_customer(customer_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
-
+    conn = None
+    try:
+        pass
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def add_order(order: Order) -> ReturnValue:
-    # TODO: implement
-    pass
-
+    conn = None
+    try:
+        pass
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def get_order(order_id: int) -> Order:
-    # TODO: implement
-    pass
-
+    conn = None
+    try:
+        pass
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def delete_order(order_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
+    conn = None
+    try:
+        pass
 
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def add_dish(dish: Dish) -> ReturnValue:
-    # TODO: implement
-    pass
+    conn = None
+    try:
+        pass
 
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def get_dish(dish_id: int) -> Dish:
-    # TODO: implement
-    pass
+    conn = None
+    try:
+        pass
 
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def update_dish_price(dish_id: int, price: float) -> ReturnValue:
-    # TODO: implement
-    pass
+    conn = None
+    try:
+        pass
 
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def update_dish_active_status(dish_id: int, is_active: bool) -> ReturnValue:
-    # TODO: implement
-    pass
-
+    conn = None
+    try:
+        pass
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def customer_placed_order(customer_id: int, order_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
-
+    conn = None
+    try:
+        pass
+    except DatabaseException.ConnectionInvalid as e:
+        print(e)
+    except DatabaseException.NOT_NULL_VIOLATION as e:
+        print(e)
+    except DatabaseException.CHECK_VIOLATION as e:
+        print(e)
+    except DatabaseException.UNIQUE_VIOLATION as e:
+        print(e)
+    except DatabaseException.FOREIGN_KEY_VIOLATION as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
 
 def get_customer_that_placed_order(order_id: int) -> Customer:
     # TODO: implement
