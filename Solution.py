@@ -9,16 +9,6 @@ from Business.Order import Order, BadOrder
 from Business.Dish import Dish, BadDish
 from Business.OrderDish import OrderDish
 
-def i(val):
-    if val is None:
-        return 'NULL'
-    return sql.Literal(int(val))
-
-def s(val):
-    if val is None:
-        return 'NULL'
-    return sql.Literalstr(val)
-
 def execute_sql(query):
     conn = None
     try:
@@ -55,7 +45,13 @@ def create_tables() -> None:
             full_name TEXT NOT NULL,
             phone TEXT NOT NULL,
             address TEXT NOT NULL CHECK(LENGTH(address) > 2)
-        )""")
+        );
+        CREATE TABLE Orders
+        (
+            order_id INTEGER PRIMARY KEY CHECK(order_id > 0),
+            date TIMESTAMP(0)
+        );
+        """)
     rv, _, _ =  execute_sql(query)
     return rv
 
@@ -106,16 +102,32 @@ def delete_customer(customer_id: int) -> ReturnValue:
     return rv
 
 def add_order(order: Order) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL("INSERT INTO Orders(order_id, date) VALUES({0},{1})")
+    query = query.format(
+        sql.Literal(order.get_order_id()),
+        sql.Literal(order.get_datetime().strftime("%Y-%m-%d %H:%M:%S")),
+    )
+    rv, _, _ = execute_sql(query)
+    return rv
 
 def get_order(order_id: int) -> Order:
-    # TODO: implement
-    pass
-
+    query = sql.SQL("SELECT * FROM Orders WHERE order_id={0}").format(sql.Literal(order_id))
+    rv, rows, result  = execute_sql(query)
+    if rv != ReturnValue.OK:
+        return rv
+    if rows == 0:
+        return BadOrder()
+    return Order(
+        order_id=result['order_id'][0],
+        date=result['date'][0]
+        #date=datetime.strptime(result['date'][0], "%Y-%m-%d %H:%M:%S")
+    )
 def delete_order(order_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL("DELETE FROM Orders WHERE cust_id={0}").format(sql.Literal(order_id))
+    rv, rows,_ = execute_sql(query)
+    if rows == 0:
+        return ReturnValue.NOT_EXISTS
+    return rv
 
 def add_dish(dish: Dish) -> ReturnValue:
     # TODO: implement

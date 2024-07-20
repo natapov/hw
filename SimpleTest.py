@@ -39,7 +39,6 @@ class Test(AbstractTest):
         self.assertEqual(ReturnValue.NOT_EXISTS, Solution.delete_customer(-1), 'delete customer illegal id')
 
     def test_order(self)->None:
-        return
         c1 = Customer(1, 'name', "0502220000", "Haifa")
         self.assertEqual(ReturnValue.OK, Solution.add_customer(c1), 'regular customer')
         o1 = Order(1,datetime(2024,7,19,14,0,0))
