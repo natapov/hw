@@ -60,7 +60,6 @@ class Test(AbstractTest):
         self.assertEqual(BadCustomer(), Solution.get_customer_that_placed_order(1), 'deleted from orders but not from all tables')
 
     def test_dish (self)->None:
-        return
         d1 = Dish(1,'salmon',89.89,True)
         d2 = Dish(1,'notSalmon',89.89,True)
         d4 = Dish(0,'salmon',89.89,True)
@@ -109,7 +108,7 @@ class Test(AbstractTest):
         self.assertEqual(ReturnValue.ALREADY_EXISTS, Solution.customer_placed_order(2,2), 'placing existing order by same customer')
         self.assertEqual(ReturnValue.NOT_EXISTS, Solution.customer_placed_order(2,4), 'regular customer')
         self.assertEqual(ReturnValue.NOT_EXISTS, Solution.customer_placed_order(5,5), 'regular customer')
-        self.assertEqual(ReturnValue.NOT_EXISTS, Solution.customer_placed_order(-2,2), 'regular customer')
+        self.assertEqual(ReturnValue.ALREADY_EXISTS, Solution.customer_placed_order(-2,2), 'regular customer')
         self.assertEqual(c1, Solution.get_customer_that_placed_order(1), 'get customer by order id ')
         self.assertEqual(c2, Solution.get_customer_that_placed_order(2), 'get customer by order id ')
         self.assertEqual(BadCustomer(), Solution.get_customer_that_placed_order(3), 'get customer by order id not placed')
@@ -147,7 +146,6 @@ class Test(AbstractTest):
         self.assertEqual([d1,d2], Solution.get_all_customer_likes(1), 'list likes')
 
     def test_orderdishes(self)->None :
-        return
         d1 = Dish(1,'salmon',89.89,True)
         d2 = Dish(2,'steak',130.89,True)
         d3 = Dish(3,'salad',23,True)
@@ -254,10 +252,6 @@ class Test(AbstractTest):
         self.assertEqual(True, Solution.is_most_liked_dish_equal_to_most_purchased(), ' liked most purchased')
         self.assertEqual(ReturnValue.OK, Solution.order_contains_dish(3, 2, 20), 'contain dish')
         self.assertEqual(False, Solution.is_most_liked_dish_equal_to_most_purchased(), ' liked most purchased')
-
-
-
-
 
 
 

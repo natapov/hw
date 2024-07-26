@@ -28,6 +28,9 @@ def execute_sql(query):
         return ReturnValue.ALREADY_EXISTS, None, None
     except DatabaseException.FOREIGN_KEY_VIOLATION as e:
         print(e)
+        return ReturnValue.NOT_EXISTS, None, None
+    except Exception as e:
+        print(e)
         return ReturnValue.ERROR, None, None
     finally:
         conn.close()
@@ -53,12 +56,28 @@ def create_tables() -> None:
         );
         CREATE TABLE Order_Makers
         (   
-            order_id INTEGER,
+            order_id INTEGER PRIMARY KEY,
             cust_id INTEGER,
             FOREIGN KEY (order_id) REFERENCES Orders(order_id),
             FOREIGN KEY (cust_id) REFERENCES Customers(cust_id)
         );
-        
+        CREATE TABLE Dishes 
+        (
+            dish_id INTEGER PRIMARY KEY CHECK(dish_id > 0),
+            name TEXT NOT NULL CHECK(LENGTH(name) >= 3),
+            price DECIMAL NOT NULL CHECK(price > 0),
+            is_active BOOLEAN NOT NULL
+        );
+        CREATE TABLE Order_Dishes
+        (   
+            order_id INTEGER,
+            dish_id INTEGER,
+            PRIMARY KEY (order_id, dish_id),
+            FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+            FOREIGN KEY (dish_id) REFERENCES Dishes(dish_id),
+            price DECIMAL NOT NULL CHECK(price > 0),
+            amount INTEGER NOT NULL CHECK(amount > 0)
+        );
         """)
     rv, _, _ =  execute_sql(query)
     return rv
@@ -70,7 +89,8 @@ def clear_tables() -> None:
 
 
 def drop_tables() -> None:
-    query = sql.SQL("DROP TABLE IF EXISTS Customers, Orders, Dishes, Order_Makers CASCADE")
+    query = sql.SQL("""DROP TABLE IF EXISTS Customers, Orders, Dishes, Order_Makers, Order_Dishes CASCADE;
+                    DROP VIEW IF EXISTS my_cust_id, dish_price;""")
     rv, _, _ = execute_sql(query)
     return rv
 
@@ -103,7 +123,10 @@ def get_customer(customer_id: int) -> Customer:
     )
 
 def delete_customer(customer_id: int) -> ReturnValue:
-    query = sql.SQL("DELETE FROM Customers WHERE cust_id={0}").format(sql.Literal(customer_id))
+    query = sql.SQL(
+        """DELETE FROM Order_Makers WHERE cust_id={0};
+        DELETE FROM Customers WHERE cust_id={0};
+        """).format(sql.Literal(customer_id))
     rv, rows,_ = execute_sql(query)
     if rows == 0:
         return ReturnValue.NOT_EXISTS
@@ -131,27 +154,70 @@ def get_order(order_id: int) -> Order:
         #date=datetime.strptime(result['date'][0], "%Y-%m-%d %H:%M:%S")
     )
 def delete_order(order_id: int) -> ReturnValue:
-    query = sql.SQL("DELETE FROM Orders WHERE order_id={0}").format(sql.Literal(order_id))
+    query = sql.SQL(
+        """DELETE FROM Order_Makers WHERE order_id={0};
+        DELETE FROM Orders WHERE order_id={0};
+        """).format(sql.Literal(order_id))
     rv, rows,_ = execute_sql(query)
     if rows == 0:
         return ReturnValue.NOT_EXISTS
     return rv
 
 def add_dish(dish: Dish) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL("INSERT INTO Dishes(dish_id, name, price, is_active) VALUES({0},{1},{2},{3})")
+    query = query.format(
+        sql.Literal(dish.get_dish_id()),
+        sql.Literal(dish.get_name()),
+        sql.Literal(dish.get_price()),
+        sql.Literal(dish.get_is_active())
+    )
+    rv, _, _ = execute_sql(query)
+    return rv
 
 def get_dish(dish_id: int) -> Dish:
-    # TODO: implement
-    pass
+    query = sql.SQL("SELECT * FROM Dishes WHERE dish_id={0}").format(sql.Literal(dish_id))
+    rv, rows, result  = execute_sql(query)
+    if rv != ReturnValue.OK:
+        return rv
+    if rows == 0:
+        return BadDish()
+    return Dish(
+        dish_id=result['dish_id'][0],
+        name=result['name'][0],
+        price=float(result['price'][0]),
+        is_active=result['is_active'][0],
+    )
 
 def update_dish_price(dish_id: int, price: float) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL(
+        """UPDATE dishes
+        SET price = {1}
+        WHERE dish_id = {0}
+        AND is_active = TRUE;
+        """)
+    query = query.format(
+        sql.Literal(dish_id),
+        sql.Literal(price),
+        )
+    rv, rows,_ = execute_sql(query)
+    if rows == 0:
+        return ReturnValue.NOT_EXISTS
+    return rv
 
 def update_dish_active_status(dish_id: int, is_active: bool) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL(
+        """UPDATE dishes
+        SET is_active = {1}
+        WHERE dish_id = {0};
+        """)
+    query = query.format(
+        sql.Literal(dish_id),
+        sql.Literal(is_active),
+        )
+    rv, rows,_ = execute_sql(query)
+    if rows == 0:
+        return ReturnValue.NOT_EXISTS
+    return rv
 
 def customer_placed_order(customer_id: int, order_id: int) -> ReturnValue:
     query = sql.SQL("INSERT INTO Order_Makers(order_id, cust_id) VALUES({0},{1})").format(
@@ -162,13 +228,14 @@ def customer_placed_order(customer_id: int, order_id: int) -> ReturnValue:
 
 def get_customer_that_placed_order(order_id: int) -> Customer:
     
-    query = sql.SQL("""CREATE VIEW my_cust_id AS 
-                    SELECT cust_id 
-                    FROM Orders 
-                    WHERE order_id={0};
+    query = sql.SQL("""DROP VIEW IF EXISTS my_cust_id;
+                    CREATE VIEW my_cust_id AS 
+                        SELECT cust_id 
+                        FROM Order_Makers 
+                        WHERE order_id={0};
                     SELECT * 
                     FROM Customers
-                    WHERE cust_id=my_cust_id;              
+                    WHERE cust_id=(select cust_id from my_cust_id);
                     """).format(sql.Literal(order_id))
     rv, rows, result  = execute_sql(query)
     if rv != ReturnValue.OK:
@@ -184,13 +251,41 @@ def get_customer_that_placed_order(order_id: int) -> Customer:
 
 
 def order_contains_dish(order_id: int, dish_id: int, amount: int) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL(
+    """SELECT price
+        FROM Dishes
+        WHERE dish_id={0} AND is_active=TRUE"""
+    )
+    query = query.format(sql.Literal(dish_id))
+    rv, rows, result  = execute_sql(query)
+
+    if rv != ReturnValue.OK:
+        return rv
+    if rows == 0:
+        return ReturnValue.NOT_EXISTS
+    price = float(result['price'][0])
+    query = sql.SQL(
+        """INSERT INTO Order_Dishes(order_id, dish_id, amount, price) VALUES({0},{1},{2},{3});""")
+    query = query.format(
+        sql.Literal(order_id),
+        sql.Literal(dish_id),
+        sql.Literal(amount),
+        sql.Literal(price)
+    )
+    rv, _, _  = execute_sql(query)
+    return rv
 
 
 def order_does_not_contain_dish(order_id: int, dish_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL("DELETE FROM Order_Dishes WHERE order_id={0} and dish_id ={0}")
+    query = query.format(
+        sql.Literal(order_id),
+        sql.Literal(dish_id)
+    )
+    rv, rows, _ = execute_sql(query)
+    if rows == 0:
+        return ReturnValue.NOT_EXISTS
+    return rv
 
 
 def get_all_order_items(order_id: int) -> List[OrderDish]:
