@@ -289,9 +289,15 @@ def order_does_not_contain_dish(order_id: int, dish_id: int) -> ReturnValue:
 
 
 def get_all_order_items(order_id: int) -> List[OrderDish]:
-    # TODO: implement
-    pass
-
+    query = sql.SQL("SELECT dish_id, price, amount FROM ORDER_DISHES WHERE order_id={0} ORDER BY dish_id ASC"
+                    .format(sql.Literal(order_id)))
+    rv, rows, result = execute_sql(query)
+    dishes = []
+    for i in range(rows):
+        dish = OrderDish(result[i]['dish_id'], result[i]['amount'], result[i]['price'])
+        dishes.append(dish)
+    return dishes
+    
 
 def customer_likes_dish(cust_id: int, dish_id: int) -> ReturnValue:
     # TODO: implement
