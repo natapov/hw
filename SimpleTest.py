@@ -117,7 +117,6 @@ class Test(AbstractTest):
         self.assertEqual(ReturnValue.ERROR, Solution.delete_customer(c1), 'ERROR Checking  ')
 
     def test_likes(self)->None :
-        return
         c2 = Customer (2,'newname',"052222222","TelAviv")
         c1 = Customer(1, 'name', "0502220000", "Haifa")
         d1 = Dish(1,'salmon',89.89,True)
@@ -185,7 +184,6 @@ class Test(AbstractTest):
         self.assertEqual([], Solution.get_all_order_items(1), 'list of items after deletion of order')
 
     def test_BasicAPI(self)->None :
-        return
         d1 = Dish(1, 'salmon', 89.89, True)
         d2 = Dish(2, 'steak', 130.89, True)
         d3 = Dish(3, 'salad', 23, True)
