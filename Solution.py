@@ -15,22 +15,16 @@ def execute_sql(query):
         conn = Connector.DBConnector()
         rows, result = conn.execute(query)
     except DatabaseException.ConnectionInvalid as e:
-        print(e)
         return ReturnValue.ERROR, None, None
     except DatabaseException.NOT_NULL_VIOLATION as e:
-        print(e)
         return ReturnValue.BAD_PARAMS, None, None
     except DatabaseException.CHECK_VIOLATION as e:
-        print(e)
         return ReturnValue.BAD_PARAMS, None, None
     except DatabaseException.UNIQUE_VIOLATION as e:
-        print(e)
         return ReturnValue.ALREADY_EXISTS, None, None
     except DatabaseException.FOREIGN_KEY_VIOLATION as e:
-        print(e)
         return ReturnValue.NOT_EXISTS, None, None
     except Exception as e:
-        print(e)
         return ReturnValue.ERROR, None, None
     finally:
         conn.close()
@@ -51,13 +45,13 @@ def create_tables() -> None:
         );
         CREATE TABLE Orders
         (
-            order_id INTEGER PRIMARY KEY CHECK(order_id > 0),
-            date TIMESTAMP(0)
+            order_id INTEGER PRIMARY KEY NOT NULL CHECK(order_id > 0),
+            date TIMESTAMP(0) NOT NULL
         );
         CREATE TABLE Order_Makers
         (   
             order_id INTEGER PRIMARY KEY,
-            cust_id INTEGER,
+            cust_id INTEGER NOT NULL,
             FOREIGN KEY (order_id) REFERENCES Orders(order_id),
             FOREIGN KEY (cust_id) REFERENCES Customers(cust_id)
         );
@@ -70,8 +64,8 @@ def create_tables() -> None:
         );
         CREATE TABLE Order_Dishes
         (   
-            order_id INTEGER,
-            dish_id INTEGER,
+            order_id INTEGER NOT NULL,
+            dish_id INTEGER NOT NULL,
             PRIMARY KEY (order_id, dish_id),
             FOREIGN KEY (order_id) REFERENCES Orders(order_id),
             FOREIGN KEY (dish_id) REFERENCES Dishes(dish_id),
@@ -80,8 +74,8 @@ def create_tables() -> None:
         );
         CREATE TABLE Likes
         (
-            cust_id INTEGER,
-            dish_id INTEGER,
+            cust_id INTEGER NOT NULL,
+            dish_id INTEGER NOT NULL,
             PRIMARY KEY (cust_id, dish_id),
             FOREIGN KEY (cust_id) REFERENCES Customers(cust_id),
             FOREIGN KEY (dish_id) REFERENCES Dishes(dish_id)
@@ -98,19 +92,19 @@ def create_tables() -> None:
             SELECT dish_id, SUM(amount) as total_amount, AVG(amount) as avg_amount
             FROM Order_Dishes
             GROUP BY dish_id;
-        
-        CREATE VIEW Cust_Order_Dishes AS
-             SELECT Customers.cust_id as cust_id,
-                 full_name,
-                 phone,
-                 address,
-                 Dishes.dish_id as dish_id
-             FROM Customers JOIN (
-                 Order_Makers JOIN Order_Dishes
-                 ON (Order_Makers.order_id = Order_Dishes.order_id))
-             ON (Customers.cust_id = Order_Makers.cust_id);
-    
         """)
+        
+        # CREATE VIEW Cust_Order_Dishes AS
+        #      SELECT Customers.cust_id as cust_id,
+        #          full_name,
+        #          phone,
+        #          address,
+        #          Dishes.dish_id as dish_id
+        #      FROM Customers JOIN (
+        #          Order_Makers JOIN Order_Dishes
+        #          ON (Order_Makers.order_id = Order_Dishes.order_id))
+        #      ON (Customers.cust_id = Order_Makers.cust_id);
+    
     rv, _, _ =  execute_sql(query)
     return rv
 
@@ -172,6 +166,8 @@ def delete_customer(customer_id: int) -> ReturnValue:
     return rv
 
 def add_order(order: Order) -> ReturnValue:
+    if not order.get_datetime():
+        return ReturnValue.BAD_PARAMS
     query = sql.SQL("INSERT INTO Orders(order_id, date) VALUES({0},{1})")
     query = query.format(
         sql.Literal(order.get_order_id()),
@@ -454,6 +450,8 @@ def get_customers_ordered_top_5_dishes() -> List[int]:
                         (SELECT dish_id FROM Liked_Dishes ORDER BY dish_likes DESC, dish_id ASC LIMIT 5)""")
     rv, rows, results = execute_sql(query)
     customers = []
+    if rv != ReturnValue.OK:
+        return rv
     for i in range(rows):
         customers.append(Customer(results[i]['cust_id'],
             results[i]['full_name'],

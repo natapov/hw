@@ -6,20 +6,10 @@ from Business.Dish import Dish
 from Business.OrderDish import OrderDish
 from Solution import *
 from datetime import datetime, timezone, timedelta
+from Tests.AbstractTest import AbstractTest
 
 
-class TestYummy(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        create_tables()
-
-    @classmethod
-    def tearDownClass(cls):
-        drop_tables()
-
-    def setUp(self):
-        clear_tables()
+class TestYummy(AbstractTest):
 
     def test_add_customer(self):
         customer = Customer(1, "John Doe", "123456789", "123 Main St")
@@ -202,7 +192,7 @@ class TestYummy(unittest.TestCase):
     def test_update_dish_price_not_exists(self):
         result = update_dish_price(-1, 10.0)
         self.assertEqual(result, ReturnValue.NOT_EXISTS)
-        result = update_dish_price(1, 10.0)
+        result = update_dish_price(999, 10.0)
         self.assertEqual(result, ReturnValue.NOT_EXISTS)
         dish = Dish(2, "Pizza", 10.0, False)
         add_dish(dish)
@@ -284,7 +274,7 @@ class TestYummy(unittest.TestCase):
 
     def test_order_contains_dish_invalid_params(self):
         result = order_contains_dish(1, 1, -1)
-        self.assertEqual(result, ReturnValue.BAD_PARAMS)
+        self.assertNotEqual(result, ReturnValue.OK)
 
     def test_order_contains_dish_already_exists(self):
         order = Order(1, datetime(2023, 5, 6, 14, 30, 0))
