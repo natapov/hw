@@ -78,6 +78,13 @@ def create_tables() -> None:
             price DECIMAL NOT NULL CHECK(price > 0),
             amount INTEGER NOT NULL CHECK(amount > 0)
         );
+        CREATE TABLE Likes
+        (
+            cust_id INTEGER,
+            dish_id INTEGER,
+            PRIMARY KEY (cust_id, dish_id),
+            FOREIGN KEY (cust_id) REFERENCES Customers(cust_id),
+            FOREIGN KEY (dish_id) REFERENCES Dishes(dish_id)
         """)
     rv, _, _ =  execute_sql(query)
     return rv
@@ -89,7 +96,7 @@ def clear_tables() -> None:
 
 
 def drop_tables() -> None:
-    query = sql.SQL("""DROP TABLE IF EXISTS Customers, Orders, Dishes, Order_Makers, Order_Dishes CASCADE;
+    query = sql.SQL("""DROP TABLE IF EXISTS Customers, Orders, Dishes, Order_Makers, Order_Dishes, Likes CASCADE;
                     DROP VIEW IF EXISTS my_cust_id, dish_price;""")
     rv, _, _ = execute_sql(query)
     return rv
@@ -109,7 +116,7 @@ def add_customer(customer: Customer) -> ReturnValue:
     return rv
 
 def get_customer(customer_id: int) -> Customer:
-    query = sql.SQL("SELECT * FROM Customers WHERE cust_id={0}").format(sql.Literal(customer_id))
+    query = sql.SQL("SELECT * FROM Customers WHERE cust_id={0}").format(sql.Literal(customer_id)")
     rv, rows, result  = execute_sql(query)
     if rv != ReturnValue.OK:
         return rv
@@ -126,6 +133,7 @@ def delete_customer(customer_id: int) -> ReturnValue:
     query = sql.SQL(
         """DELETE FROM Order_Makers WHERE cust_id={0};
         DELETE FROM Customers WHERE cust_id={0};
+        DELETE FROM Likes WHERE cust_id={0};
         """).format(sql.Literal(customer_id))
     rv, rows,_ = execute_sql(query)
     if rows == 0:
@@ -157,6 +165,7 @@ def delete_order(order_id: int) -> ReturnValue:
     query = sql.SQL(
         """DELETE FROM Order_Makers WHERE order_id={0};
         DELETE FROM Orders WHERE order_id={0};
+        DELETE FROM Order_Dishes WHERE order_id={0};
         """).format(sql.Literal(order_id))
     rv, rows,_ = execute_sql(query)
     if rows == 0:
@@ -190,7 +199,7 @@ def get_dish(dish_id: int) -> Dish:
 
 def update_dish_price(dish_id: int, price: float) -> ReturnValue:
     query = sql.SQL(
-        """UPDATE dishes
+        """UPDATE Dishes
         SET price = {1}
         WHERE dish_id = {0}
         AND is_active = TRUE;
@@ -206,7 +215,7 @@ def update_dish_price(dish_id: int, price: float) -> ReturnValue:
 
 def update_dish_active_status(dish_id: int, is_active: bool) -> ReturnValue:
     query = sql.SQL(
-        """UPDATE dishes
+        """UPDATE Dishes
         SET is_active = {1}
         WHERE dish_id = {0};
         """)
@@ -289,8 +298,8 @@ def order_does_not_contain_dish(order_id: int, dish_id: int) -> ReturnValue:
 
 
 def get_all_order_items(order_id: int) -> List[OrderDish]:
-    query = sql.SQL("SELECT dish_id, price, amount FROM ORDER_DISHES WHERE order_id={0} ORDER BY dish_id ASC"
-                    .format(sql.Literal(order_id)))
+    query = sql.SQL("SELECT dish_id, price, amount FROM ORDER_DISHES WHERE order_id={0} ORDER BY dish_id ASC".format(
+        sql.Literal(order_id)))
     rv, rows, result = execute_sql(query)
     dishes = []
     for i in range(rows):
@@ -300,17 +309,36 @@ def get_all_order_items(order_id: int) -> List[OrderDish]:
     
 
 def customer_likes_dish(cust_id: int, dish_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL("""INSERT INTO Likes(cust_id, dish_id) VALUES({0}, {1})""").format(
+        sql.Literal(cust_id),
+        sql.Literal(dish_id))
+    rv, _, _ = execute_sql(query)
+    return rv
+    
 
 
 def customer_dislike_dish(cust_id: int, dish_id: int) -> ReturnValue:
-    # TODO: implement
-    pass
+    query = sql.SQL("DELETE FROM Likes WHERE cust_id={0] and dish_id={1}").fromat(
+        sql.Literal(cust_id),
+        sql.Literal(dish_id))
+    rv, rows, _ = execute_sql(query)
+    if rows == 0:
+        return ReturnValue.NOT_EXISTS
+    return rv
 
 def get_all_customer_likes(cust_id: int) -> List[Dish]:
-    # TODO: implement
-    pass
+    query - sql.SQL("SELECT Dishes.dish_id, name, price, is_active 
+                    FROM Likes, Dishes
+                    WHERE Likes.dish_id=Dishes.dish_id and cust_id={0}".format(
+                    sql.Literal(cust_id))
+    dishes = []
+    rev, rows, results = execute_sql(query)
+    for i in range(rows):
+        liked_dish = Dish(result[i]['Dishes.dish_id'], result[i]['name'],
+                            result[i]['price'], result[i][]is_active'])
+        results.append(liked_dish)
+    return liked_dish
+    
 # ---------------------------------- BASIC API: ----------------------------------
 
 # Basic API
