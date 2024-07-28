@@ -420,9 +420,15 @@ def get_most_expensive_anonymous_order() -> Order:
 
 def is_most_liked_dish_equal_to_most_purchased() -> bool:
     query = sql.SQL("""SELECT dish_id
-                        FROM Dishes_Amounts, Liked_Dishes
-                        WHERE Dishes_Amounts.dish_id=Liked_Dishes.dish_id
-
+                        FROM Dishes
+                        WHERE dish_id IN
+                        (SELECT dish_id FROM Liked_Dishes ORDER BY dish_likes DESC, dish_id ASC LIMIT 1)
+                        AND dish_id IN 
+                        (SELECT dish_id FROM Dishes_Amounts ORDER BY SUM(amount) DESC, dish_id ASC LIMIT 1)""")
+    rv, rows, results = execute_sql(query)
+    if rv != ReturnValue.OK or rows == 0:
+        return False
+    return True
 
 # ---------------------------------- ADVANCED API: ----------------------------------
 
