@@ -91,13 +91,18 @@ def create_tables() -> None:
             FROM Order_Dishes
             GROUP BY order_id;
         CREATE VIEW Liked_Dishes AS
-            SELECT dish_id, COUNT(cust_id)
+            SELECT dish_id, COUNT(cust_id) as dish_likes
             FROM Likes
             GROUP BY dish_id;
         CREATE VIEW Dishes_Amounts AS
             SELECT dish_id, SUM(amount), AVG(amount)
             FROM Order_Dishes
             GROUP BY dish_id;
+        CREATE VIEW Cust_Order_Dishes As
+            SELECT Customers.cust_id as cust_id, full_name, phone, address, Dishes.dis_id as dish_id
+            FROM Customers JOIN (Order_Makers JOIN Order_Dishes ON (Order_Makers.order_ids = Order_Dishes.order_id))
+            ON (Customers.cust_id = Order_Makers.cust_id)
+        
         """)
     rv, _, _ =  execute_sql(query)
     return rv
@@ -425,8 +430,16 @@ def is_most_liked_dish_equal_to_most_purchased() -> bool:
 
 
 def get_customers_ordered_top_5_dishes() -> List[int]:
-    # TODO: implement
-    pass
+    query = sql.SQL("""SELECT cust_id, full_name, phone, address
+                        FROM Cust_Order_Dishes
+                        WHERE dish_id = ALL
+                        (SELECT dish_id FROM Liked_Dishes ORDER BY dish_likes DESC, dish_id ASC LIMIT 5)""")
+    rv, rows, results = excecute_sql(query)
+    customers = []
+    for i in range(rows):
+        customers.append(Customer(results[i]['cust_id], results[i]['full_name'],
+                        results[i]['phone'], results[i]['address']))
+    return customers
 
 
 def get_non_worth_price_increase() -> List[int]:
