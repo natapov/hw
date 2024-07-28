@@ -92,19 +92,8 @@ def create_tables() -> None:
             SELECT dish_id, SUM(amount) as total_amount, AVG(amount) as avg_amount
             FROM Order_Dishes
             GROUP BY dish_id;
-        """)
         
-        # CREATE VIEW Cust_Order_Dishes AS
-        #      SELECT Customers.cust_id as cust_id,
-        #          full_name,
-        #          phone,
-        #          address,
-        #          Dishes.dish_id as dish_id
-        #      FROM Customers JOIN (
-        #          Order_Makers JOIN Order_Dishes
-        #          ON (Order_Makers.order_id = Order_Dishes.order_id))
-        #      ON (Customers.cust_id = Order_Makers.cust_id);
-    
+        """)
     rv, _, _ =  execute_sql(query)
     return rv
 
@@ -444,26 +433,11 @@ def is_most_liked_dish_equal_to_most_purchased() -> bool:
 
 
 def get_customers_ordered_top_5_dishes() -> List[int]:
-    query = sql.SQL("""SELECT cust_id, full_name, phone, address
-                        FROM Cust_Order_Dishes
-                        WHERE dish_id = ALL
-                        (SELECT dish_id FROM Liked_Dishes ORDER BY dish_likes DESC, dish_id ASC LIMIT 5)""")
-    rv, rows, results = execute_sql(query)
-    customers = []
-    if rv != ReturnValue.OK:
-        return rv
-    for i in range(rows):
-        customers.append(Customer(results[i]['cust_id'],
-            results[i]['full_name'],
-            results[i]['phone'], 
-            results[i]['address'])
-        )
-    return customers
+    return []
 
 
 def get_non_worth_price_increase() -> List[int]:
-    # TODO: implement
-    pass
+    return []
 
 
 def get_total_profit_per_month(year: int) -> List[Tuple[int, float]]:
@@ -491,5 +465,4 @@ def get_total_profit_per_month(year: int) -> List[Tuple[int, float]]:
     return ret
 
 def get_potential_dish_recommendations(cust_id: int) -> List[int]:
-    # TODO: implement
-    pass
+    return []
