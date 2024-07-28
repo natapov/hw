@@ -90,6 +90,14 @@ def create_tables() -> None:
             SELECT order_id, SUM(price) as total_price
             FROM Order_Dishes
             GROUP BY order_id;
+        CREATE VIEW Liked_Dishes AS
+            SELECT dish_id, COUNT(cust_id)
+            FROM Likes
+            GROUP BY dish_id;
+        CREATE VIEW Dishes_Amounts AS
+            SELECT dish_id, SUM(amount), AVG(amount)
+            FROM Order_Dishes
+            GROUP BY dish_id;
         """)
     rv, _, _ =  execute_sql(query)
     return rv
@@ -406,8 +414,9 @@ def get_most_expensive_anonymous_order() -> Order:
 
 
 def is_most_liked_dish_equal_to_most_purchased() -> bool:
-    # TODO: implement
-    pass
+    query = sql.SQL("""SELECT dish_id
+                        FROM Dishes_Amounts, Liked_Dishes
+                        WHERE Dishes_Amounts.dish_id=Liked_Dishes.dish_id
 
 
 # ---------------------------------- ADVANCED API: ----------------------------------
