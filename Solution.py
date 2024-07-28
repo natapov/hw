@@ -387,8 +387,17 @@ def get_max_amount_of_money_cust_spent(cust_id: int) -> float:
 
 
 def get_most_expensive_anonymous_order() -> Order:
-    # TODO: implement
-    pass
+    query = sql.SQL("""SELECT Orders.order_id, date 
+                        FROM Orders, Order_Total_Price
+                        WHERE Orders.order_id=Order_Total_Price.order_id
+                        and Orders.order_id NOT IN ( SELECT order_id FROM Order_Makers )
+                        ORDER BY SUM(price) DESC, Orders_id ASC""")
+    rv, rows, results = execute_sql(query)
+    if rv != ReturnValue.OK:
+        return rv
+    if rows == 0:
+        None
+    return Order(order_id=results[0]['Orders.order_id'], date=results[0]['date'])
 
 
 def is_most_liked_dish_equal_to_most_purchased() -> bool:
