@@ -98,19 +98,19 @@ def create_tables() -> None:
             SELECT dish_id, SUM(amount) as total_amount, AVG(amount) as avg_amount
             FROM Order_Dishes
             GROUP BY dish_id;
-        """
-        # CREATE VIEW Cust_Order_Dishes AS
-        #     SELECT Customers.cust_id as cust_id,
-        #         full_name,
-        #         phone,
-        #         address,
-        #         Dishes.dish_id as dish_id
-        #     FROM Customers JOIN (
-        #         Order_Makers JOIN Order_Dishes
-        #         ON (Order_Makers.order_id = Order_Dishes.order_id))
-        #     ON (Customers.cust_id = Order_Makers.cust_id)
+        
+        CREATE VIEW Cust_Order_Dishes AS
+             SELECT Customers.cust_id as cust_id,
+                 full_name,
+                 phone,
+                 address,
+                 Dishes.dish_id as dish_id
+             FROM Customers JOIN (
+                 Order_Makers JOIN Order_Dishes
+                 ON (Order_Makers.order_id = Order_Dishes.order_id))
+             ON (Customers.cust_id = Order_Makers.cust_id);
     
-        )
+        """)
     rv, _, _ =  execute_sql(query)
     return rv
 
