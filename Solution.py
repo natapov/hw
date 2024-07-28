@@ -87,7 +87,7 @@ def create_tables() -> None:
             FOREIGN KEY (dish_id) REFERENCES Dishes(dish_id)
         );
         CREATE VIEW Order_Total_Price AS
-            SELECT order_id, SUM(price)
+            SELECT order_id, SUM(price) as total_price
             FROM Order_Dishes
             GROUP BY order_id;
         """)
@@ -362,36 +362,35 @@ def get_all_customer_likes(cust_id: int) -> List[Dish]:
 
 
 def get_order_total_price(order_id: int) -> float:
-    query = sql.SQL("SELECT SUM(price) FROM Order_Total_Price WHERE order_id={id}".format(
-                    id=sql.Literal(order_id)))
+    query = sql.SQL("SELECT total_price FROM Order_Total_Price WHERE order_id={id}").format(
+                    id=sql.Literal(order_id))
     rv, rows, results = execute_sql(query)
     if rv != ReturnValue.OK:
         return rv
     if rows == 0:
         return 0
-    return float(results[0]['SUM(price)'])
+    return float(results[0]['total_price'])
 
 
 def get_max_amount_of_money_cust_spent(cust_id: int) -> float:
-    query = sql.SQL("""SELECT SUM(price) FROM Order_Makers, Order_Total_Price
+    query = sql.SQL("""SELECT total_price FROM Order_Makers, Order_Total_Price
                     WHERE Order_Total_Price.order_id=Order_Makers.order_id
                     and Order_Makers.cust_id={customer_id}
-                    ORDER BY SUM(price) ASC""".format(customer_id=sql.Literal(cust_id)))
+                    ORDER BY total_price ASC""").format(customer_id=sql.Literal(cust_id))
     rv, rows, results = execute_sql(query)
     if rv != ReturnValue.OK:
         return rv
     if rows == 0:
         return 0
-    return float(results[0]['SUM(price)'])
+    return float(results[0]['total_price'])
         
-
 
 def get_most_expensive_anonymous_order() -> Order:
     query = sql.SQL("""SELECT Orders.order_id, date 
                         FROM Orders, Order_Total_Price
                         WHERE Orders.order_id=Order_Total_Price.order_id
                         and Orders.order_id NOT IN ( SELECT order_id FROM Order_Makers )
-                        ORDER BY SUM(price) DESC, Orders_id ASC""")
+                        ORDER BY Order_Total_Price.total_price DESC, Orders.order_id ASC""")
     rv, rows, results = execute_sql(query)
     if rv != ReturnValue.OK:
         return rv

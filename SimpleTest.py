@@ -91,7 +91,6 @@ class Test(AbstractTest):
         self.assertEqual(ReturnValue.NOT_EXISTS, Solution.update_dish_active_status(-1,False), 'status change bad param')
 
     def test_customersPlacingOrders(self)->None :
-        return
         c2 = Customer (2,'newname',"052222222","TelAviv")
         c1 = Customer(1, 'name', "0502220000", "Haifa")
         o1 = Order(1,datetime(2024,7,19,14,0,0))
@@ -250,7 +249,6 @@ class Test(AbstractTest):
         self.assertEqual(True, Solution.is_most_liked_dish_equal_to_most_purchased(), ' liked most purchased')
         self.assertEqual(ReturnValue.OK, Solution.order_contains_dish(3, 2, 20), 'contain dish')
         self.assertEqual(False, Solution.is_most_liked_dish_equal_to_most_purchased(), ' liked most purchased')
-
 
 
 
