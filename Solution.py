@@ -96,8 +96,14 @@ def create_tables() -> None:
 
 
 def clear_tables() -> None:
-    # TODO: implement
-    pass
+    query = sql.SQL("""DELETE FROM Customers;
+                    DELETE FROM Orders;
+                    DELETE FROM Dishes;
+                    DELETE FROM Order_Makers;
+                    DELETE FROM Order_Dishes;
+                    DELETE FROM Likes;""")
+    rv, _, _ = execute_sql(query)
+    return rv
 
 
 def drop_tables() -> None:
