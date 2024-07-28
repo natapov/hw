@@ -24,8 +24,8 @@ def execute_sql(query):
         return ReturnValue.ALREADY_EXISTS, None, None
     except DatabaseException.FOREIGN_KEY_VIOLATION as e:
         return ReturnValue.NOT_EXISTS, None, None
-    except Exception as e:
-        return ReturnValue.ERROR, None, None
+    # except Exception as e:
+    #     return ReturnValue.ERROR, None, None
     finally:
         conn.close()
     return ReturnValue.OK, rows, result
@@ -467,9 +467,28 @@ def get_non_worth_price_increase() -> List[int]:
 
 
 def get_total_profit_per_month(year: int) -> List[Tuple[int, float]]:
-    # TODO: implement
-    pass
-
+    query = sql.SQL("""WITH all_months AS (
+                        SELECT generate_series(1, 12) AS month
+                    ),
+                    order_sums AS (
+                        SELECT SUM(total_price) as sum, EXTRACT(MONTH from date) AS month
+                        FROM Orders, Order_Total_Price
+                        WHERE Orders.order_id = Order_Total_Price.order_id
+                        AND EXTRACT(YEAR from date) = {0}
+                        GROUP BY EXTRACT(MONTH from date)
+                    )
+                    SELECT am.month, COALESCE(os.sum, 0) AS sum
+                    FROM all_months am
+                    LEFT JOIN order_sums os ON am.month = os.month
+                    ORDER BY am.month DESC;""")
+    query = query.format(sql.Literal(year))
+    rv, rows, results = execute_sql(query)
+    if rv != ReturnValue.OK:
+        return rv
+    ret = []
+    for i in range(rows):
+        ret.append((int(results[i]['month']), float(results[i]['sum'])))
+    return ret
 
 def get_potential_dish_recommendations(cust_id: int) -> List[int]:
     # TODO: implement
