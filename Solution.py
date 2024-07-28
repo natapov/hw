@@ -85,6 +85,11 @@ def create_tables() -> None:
             PRIMARY KEY (cust_id, dish_id),
             FOREIGN KEY (cust_id) REFERENCES Customers(cust_id),
             FOREIGN KEY (dish_id) REFERENCES Dishes(dish_id)
+        );
+        CREATE VIEW Order_Total_Price AS
+            SELECT order_id, SUM(price)
+            FROM Order_Dishes
+            GROUP BY order_id;
         """)
     rv, _, _ =  execute_sql(query)
     return rv
@@ -97,7 +102,7 @@ def clear_tables() -> None:
 
 def drop_tables() -> None:
     query = sql.SQL("""DROP TABLE IF EXISTS Customers, Orders, Dishes, Order_Makers, Order_Dishes, Likes CASCADE;
-                    DROP VIEW IF EXISTS my_cust_id, dish_price;""")
+                    DROP VIEW IF EXISTS my_cust_id, dish_price, Order_Total_Price;""")
     rv, _, _ = execute_sql(query)
     return rv
 
@@ -131,9 +136,9 @@ def get_customer(customer_id: int) -> Customer:
 
 def delete_customer(customer_id: int) -> ReturnValue:
     query = sql.SQL(
-        """DELETE FROM Order_Makers WHERE cust_id={0};
+        """DELETE FROM Likes WHERE cust_id={0};
+        DELETE FROM Order_Makers WHERE cust_id={0};
         DELETE FROM Customers WHERE cust_id={0};
-        DELETE FROM Likes WHERE cust_id={0};
         """).format(sql.Literal(customer_id))
     rv, rows,_ = execute_sql(query)
     if rows == 0:
@@ -345,13 +350,24 @@ def get_all_customer_likes(cust_id: int) -> List[Dish]:
 
 
 def get_order_total_price(order_id: int) -> float:
-    # TODO: implement
-    pass
+    query = sql.SQL("SELECT SUM(price) FROM Order_Total_Price WHERE order_id={id}".format(
+                    id=sql.Literal(order_id)))
+    rev, rows, results = execute_sql(query)
+    if rows == 0:
+        return 0
+    return float(results[0]['SUM(price)'])
 
 
 def get_max_amount_of_money_cust_spent(cust_id: int) -> float:
-    # TODO: implement
-    pass
+    query = sql.SQL("SELECT SUM(price) FROM Order_Makers, Order_Total_Price
+                    WHERE Order_Total_Price.order_id=Order_Makers.order_id
+                    and Order_Makers.cust_id={customer_id}
+                    ORDER BY SUM(price) ASC".format(customer_id=sql.Literal(cust_id)))
+    rev, rows, results = execute_sql(query)
+    if rows == 0:
+        return 0
+    return float(results[0]['SUM(price)'])
+        
 
 
 def get_most_expensive_anonymous_order() -> Order:
